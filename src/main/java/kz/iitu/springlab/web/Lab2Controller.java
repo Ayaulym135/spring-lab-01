@@ -2,9 +2,13 @@ package kz.iitu.springlab.web;
 
 import kz.iitu.springlab.lifecycle.LifecycleDemo;
 import kz.iitu.springlab.notify.NotificationService;
+import kz.iitu.springlab.notify.Notifier;
 import kz.iitu.springlab.scope.TicketOffice;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lab2")
@@ -12,15 +16,20 @@ public class Lab2Controller {
 
     private final NotificationService notifications;
     private final LifecycleDemo lifecycle;
-    private final TicketOffice ticketOffice; // 1. Новое поле
+    private final TicketOffice ticketOffice;
+    private final Notifier customNotifier;
 
-    // 2. Добавлен TicketOffice в конструктор
-    public Lab2Controller(NotificationService notifications,
-                          LifecycleDemo lifecycle,
-                          TicketOffice ticketOffice) {
+    // Единый конструктор для внедрения всех зависимостей
+    public Lab2Controller(
+            NotificationService notifications,
+            LifecycleDemo lifecycle,
+            TicketOffice ticketOffice,
+            @Qualifier("upper") Notifier customNotifier // Замените "upper" на имя вашей реализации
+    ) {
         this.notifications = notifications;
         this.lifecycle = lifecycle;
         this.ticketOffice = ticketOffice;
+        this.customNotifier = customNotifier;
     }
 
     @GetMapping("/notify")
@@ -38,9 +47,13 @@ public class Lab2Controller {
         return lifecycle.events();
     }
 
-    // 3. Новый эндпоинт из выделенного фрагмента
     @GetMapping("/scopes")
     public Map<String, Object> scopes() {
         return ticketOffice.demo();
+    }
+
+    @GetMapping("/custom")
+    public String custom(@RequestParam(defaultValue = "Hello Spring") String text) {
+        return customNotifier.send(text);
     }
 }
